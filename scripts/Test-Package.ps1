@@ -8,6 +8,7 @@ $rulesFile = Join-Path $testRoot 'rules.txt'
 $pacFile = Join-Path $testRoot 'proxy.pac'
 $port = Get-Random -Minimum 20000 -Maximum 30000
 $serverScript = Join-Path $root 'src\pac_server.py'
+$guiScript = Join-Path $root 'WindowsSplitPAC.ps1'
 $process = $null
 
 function Get-PythonExecutable {
@@ -25,6 +26,15 @@ function Get-PythonExecutable {
 }
 
 try {
+    # Parse every PowerShell entry point without opening the graphical interface.
+    Get-ChildItem -LiteralPath $root -Filter '*.ps1' -File | ForEach-Object { [ScriptBlock]::Create((Get-Content -LiteralPath $_.FullName -Raw)) | Out-Null }
+    Get-ChildItem -LiteralPath (Join-Path $root 'scripts') -Filter '*.ps1' -File | ForEach-Object { [ScriptBlock]::Create((Get-Content -LiteralPath $_.FullName -Raw)) | Out-Null }
+    if (-not (Test-Path -LiteralPath $guiScript)) { throw 'Graphical launcher is missing.' }
+    $guiBytes = [System.IO.File]::ReadAllBytes($guiScript)
+    if ($guiBytes.Length -lt 3 -or $guiBytes[0] -ne 0xEF -or $guiBytes[1] -ne 0xBB -or $guiBytes[2] -ne 0xBF) {
+        throw 'Graphical launcher must use UTF-8 with BOM for Windows PowerShell 5.1 Chinese text support.'
+    }
+
     New-Item -ItemType Directory -Force -Path $testRoot | Out-Null
     Set-Content -LiteralPath $rulesFile -Value '||example.com' -Encoding ascii
     $python = Get-PythonExecutable
