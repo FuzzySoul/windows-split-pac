@@ -1,0 +1,16 @@
+# Generated PAC files, runtime state, and local settings
+dist/
+.runtime/
+config.local.json
+
+# Python and editor artifacts
+__pycache__/
+*.py[cod]
+.venv/
+.vscode/
+.idea/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
