@@ -28,7 +28,7 @@ try {
     # The port is available or contains a non-responsive process; continue and let Python report a real bind failure.
 }
 
-foreach ($candidate in @('py', 'python')) {
+foreach ($candidate in @('python', 'py')) {
     try {
         $pythonPath = & $candidate -c 'import sys; print(sys.executable)' 2>$null
         if ($LASTEXITCODE -eq 0 -and $pythonPath) {

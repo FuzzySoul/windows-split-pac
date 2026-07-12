@@ -11,7 +11,7 @@ $serverScript = Join-Path $root 'src\pac_server.py'
 $process = $null
 
 function Get-PythonExecutable {
-    foreach ($candidate in @('py', 'python')) {
+    foreach ($candidate in @('python', 'py')) {
         try {
             $pythonPath = & $candidate -c 'import sys; print(sys.executable)' 2>$null
             if ($LASTEXITCODE -eq 0 -and $pythonPath) {

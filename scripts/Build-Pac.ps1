@@ -13,7 +13,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-foreach ($candidate in @('py', 'python')) {
+foreach ($candidate in @('python', 'py')) {
     try {
         & $candidate -m genpac --version *> $null
         if ($LASTEXITCODE -eq 0) {

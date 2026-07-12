@@ -4,7 +4,7 @@ param()
 $ErrorActionPreference = 'Stop'
 
 function Get-PythonCommand {
-    foreach ($candidate in @('py', 'python')) {
+    foreach ($candidate in @('python', 'py')) {
         try {
             & $candidate --version *> $null
             if ($LASTEXITCODE -eq 0) {
