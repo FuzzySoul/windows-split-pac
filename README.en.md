@@ -86,6 +86,7 @@ cargo run --release --manifest-path rust-gui\Cargo.toml
 - [Contribution guide](CONTRIBUTING.md)
 - [Security policy and privacy notes](SECURITY.md)
 - [Changelog](CHANGELOG.md)
+- [Third-party notices](THIRD_PARTY_NOTICES.md)
 - [MIT License](LICENSE)
 
 Never include proxy endpoints, PAC files, cookies, passwords, or private-network data in issues and logs.

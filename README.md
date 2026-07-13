@@ -86,6 +86,7 @@ cargo run --release --manifest-path rust-gui\Cargo.toml
 - [贡献指南](CONTRIBUTING.md)
 - [安全策略与隐私说明](SECURITY.md)
 - [变更日志](CHANGELOG.md)
+- [第三方许可证说明](THIRD_PARTY_NOTICES.md)
 - [MIT 许可证](LICENSE)
 
 提交 issue 或日志时，请勿包含代理地址、PAC 文件、Cookie、密码或内网信息。

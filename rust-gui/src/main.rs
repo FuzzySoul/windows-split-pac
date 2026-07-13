@@ -2,6 +2,7 @@ use std::{
     fs,
     path::{Path, PathBuf},
     process::Command,
+    sync::Arc,
 };
 
 use eframe::egui::{self, Color32, RichText, Stroke};
@@ -294,6 +295,25 @@ impl eframe::App for SplitPacApp {
 }
 
 fn configure_visuals(ctx: &egui::Context) {
+    let mut fonts = egui::FontDefinitions::default();
+    fonts.font_data.insert(
+        "noto-sans-sc".to_owned(),
+        Arc::new(egui::FontData::from_static(include_bytes!(
+            "../../assets/fonts/NotoSansSC[wght].ttf"
+        ))),
+    );
+    fonts
+        .families
+        .entry(egui::FontFamily::Proportional)
+        .or_default()
+        .insert(0, "noto-sans-sc".to_owned());
+    fonts
+        .families
+        .entry(egui::FontFamily::Monospace)
+        .or_default()
+        .push("noto-sans-sc".to_owned());
+    ctx.set_fonts(fonts);
+
     let mut visuals = egui::Visuals::dark();
     visuals.panel_fill = CANVAS;
     visuals.window_fill = PANEL;

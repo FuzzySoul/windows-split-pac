@@ -27,7 +27,7 @@ jobs:
           Copy-Item rust-gui/target/release/windows-split-pac-gui.exe $package/
           New-Item -ItemType Directory -Force "$package/rust-gui" | Out-Null
           Copy-Item rust-gui/Cargo.toml, rust-gui/Cargo.lock "$package/rust-gui/"
-          Copy-Item Start-WindowsSplitPAC.cmd, README.md, README.en.md, LICENSE, CHANGELOG.md, SECURITY.md $package/
+          Copy-Item Start-WindowsSplitPAC.cmd, README.md, README.en.md, LICENSE, CHANGELOG.md, SECURITY.md, THIRD_PARTY_NOTICES.md $package/
           Copy-Item assets, scripts, rules, src $package/ -Recurse
           Compress-Archive -Path "$package/*" -DestinationPath release/WindowsSplitPAC.zip -Force
       - name: Generate SHA-256 checksum
