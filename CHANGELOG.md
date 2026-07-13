@@ -4,6 +4,12 @@ All notable changes to Windows Split PAC are documented here.
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-07-13
+
+### Changed
+
+- Updated the release artifact uploader to the current GitHub Actions runtime.
+
 ## [0.3.0] - 2026-07-13
 
 ### Added
