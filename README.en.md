@@ -2,77 +2,59 @@
 
 [简体中文](README.md) | [English](README.en.md)
 
-A lightweight Windows PAC split-routing tool. GFWList-matched sites and your explicit rules use an HTTP proxy; everything else stays direct. No SOCKS5, Clash/Mihomo, or hidden installer.
+A native Rust desktop control center for GFWList PAC split routing. Matching sites and custom rules use an HTTP proxy; all other traffic stays direct. No Clash, Mihomo, SOCKS5, or manual proxy-setting steps.
 
-## Simple mode
+## Simple workflow
 
-Install [Python 3](https://www.python.org/downloads/windows/) first and select **Add Python to PATH** during setup. Then:
-
-1. Download or clone this project.
+1. Download the `WindowsSplitPAC` artifact from **Actions -> Build Windows Package** and extract it anywhere.
 2. Double-click `Start-WindowsSplitPAC.cmd`.
-3. Choose `简体中文` or `English` in the top-right language selector.
-4. Select **Prepare Python and genpac**.
-5. Enter your Every Proxy **HTTP** endpoint, such as `192.168.1.100:8080`, without `http://`.
-6. Select **Generate PAC and start**.
-7. Select **Copy PAC URL and open Windows Settings**. In Windows Proxy settings, enable **Use setup script** and paste:
+3. Choose `简体中文` or `English` in the top-right corner.
+4. Enter the HTTP endpoint of Every Proxy, for example `192.168.1.100:8080`, without `http://`.
+5. Enable **Start the local PAC service after sign-in** if you want autostart.
+6. Click **Enable smart routing**. The app installs genpac, downloads GFWList, generates PAC, starts the local service, and applies the Windows automatic proxy-script setting.
+7. Click **Run split test**. A successful result shows one `PROXY` decision and one `DIRECT` decision.
+
+The active PAC URL is:
 
 ```text
 http://127.0.0.1:8765/proxy.pac
 ```
 
-The graphical interface never changes your Windows proxy setting automatically. You remain in control of that final step.
+**Stop and disable routing** clears the Windows PAC setting and stops the local server. The dashboard always shows both Windows and local-service state.
 
-## Common tasks
+## Included capabilities
 
-- Proxy address changed: enter the new address and select **Generate PAC and start**. The Windows PAC URL stays the same.
-- A site must use the proxy: select **Edit custom rules**, add `||example.com`, save, then generate again.
+- One-click GFWList routing for HTTP proxies.
+- Automatic Windows PAC application and refresh.
+- Autostart in the simple dashboard.
+- A real PAC decision test using Windows JScript.
+- Chinese/English UI, custom-rule editor, and diagnostics.
+- Local proxy addresses and settings remain under ignored `data/` files.
 
-## How it works
+## Custom rules
 
-```text
-Browser -> local PAC URL
-             |
-             +-> GFWList or custom-rule match -> HTTP proxy
-             |
-             +-> everything else -> DIRECT
-```
-
-GFWList is a proxy rule list, not a perfect country classifier. Unmatched sites are direct. Override rules live in `rules/user-rules.txt`:
+Use the expandable custom-rules panel:
 
 ```text
 ||example.com     # force proxy
 @@||example.com   # force direct
 ```
 
-The local server reads the PAC file for every request, so regenerating the PAC normally does **not** require a server restart.
+Save and enable smart routing again to regenerate PAC. GFWList is a proxy rule list, not a strict country database; unmatched sites are direct.
 
-## Advanced mode
+## Diagnostics
 
-The Advanced tab exposes the same actions. You can also run the scripts directly:
+The old “professional mode” has been removed because the dashboard contains the normal workflow. The remaining diagnostic panel is only for rule editing and test output. Command-line maintenance is still available:
 
 ```powershell
-.\scripts\Install-Dependencies.ps1
-.\scripts\Build-Pac.ps1 -ProxyAddress '192.168.1.100:8080'
-.\scripts\Start-PacServer.ps1
-.\scripts\Stop-PacServer.ps1
 .\scripts\Test-Package.ps1
+.\scripts\Test-SplitRouting.ps1
+.\scripts\Disable-WindowsPac.ps1
 ```
 
-Optional autostart is explicit and reversible:
+## Build and test
 
-```powershell
-.\scripts\Install-Autostart.ps1
-.\scripts\Uninstall-Autostart.ps1
-```
-
-It creates the `WindowsSplitPAC` logon task, which starts only the local server and never changes Windows proxy settings.
-
-## Safety and troubleshooting
-
-- The server listens only on `127.0.0.1`.
-- Proxy addresses, rules, PAC output, PID files, and logs are ignored by Git.
-- Start validates HTTP before reporting success; stop validates process ownership.
-- If a domestic site remains slow, first check whether a rule is sending it through the proxy. If it is, latency usually comes from the phone/VPN/proxy exit chain rather than PAC generation.
+GitHub Actions uses clean Windows runners for a Rust quality gate (`fmt`, `clippy`, tests) and a separate PAC isolation test. The **Build Windows Package** workflow creates a portable ZIP artifact containing the native executable and helper scripts.
 
 ## License
 

@@ -1,0 +1,36 @@
+name: Build Windows Package
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: Build portable Windows package
+    runs-on: windows-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Install stable Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Build release executable
+        run: cargo build --release --manifest-path rust-gui\Cargo.toml
+      - name: Assemble portable package
+        shell: pwsh
+        run: |
+          $package = 'release/WindowsSplitPAC'
+          New-Item -ItemType Directory -Force $package | Out-Null
+          Copy-Item rust-gui/target/release/windows-split-pac-gui.exe $package/
+          Copy-Item Start-WindowsSplitPAC.cmd, README.md, README.en.md, LICENSE $package/
+          Copy-Item scripts, rules, src $package/ -Recurse
+          Compress-Archive -Path "$package/*" -DestinationPath release/WindowsSplitPAC.zip -Force
+      - name: Upload portable package
+        uses: actions/upload-artifact@v4
+        with:
+          name: WindowsSplitPAC
+          path: release/WindowsSplitPAC.zip
+          if-no-files-found: error

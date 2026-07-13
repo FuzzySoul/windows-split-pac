@@ -1,0 +1,11 @@
+[package]
+name = "windows-split-pac-gui"
+version = "0.2.0"
+edition = "2024"
+description = "A native Windows control center for GFWList PAC split routing"
+license = "MIT"
+
+[dependencies]
+eframe = { version = "0.33", default-features = false, features = ["default_fonts", "glow"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

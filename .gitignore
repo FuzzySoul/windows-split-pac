@@ -2,6 +2,10 @@
 dist/
 .runtime/
 config.local.json
+data/
+release/
+.rust-install/
+rust-gui/target/
 
 # Python and editor artifacts
 __pycache__/

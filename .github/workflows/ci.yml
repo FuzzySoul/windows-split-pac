@@ -1,0 +1,47 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  rust-quality:
+    name: Rust quality gate
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: rust-gui
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Install stable Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+      - name: Run Clippy
+        run: cargo clippy --all-targets -- -D warnings
+      - name: Run Rust tests
+        run: cargo test --all-targets
+
+  pac-isolation:
+    name: PAC isolation test
+    runs-on: windows-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install PAC generator
+        run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Verify PAC generation and routing decisions
+        shell: pwsh
+        run: .\scripts\Test-Package.ps1
