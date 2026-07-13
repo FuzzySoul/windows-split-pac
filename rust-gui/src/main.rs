@@ -169,13 +169,14 @@ impl eframe::App for SplitPacApp {
             });
             ui.add_space(18.0);
 
-            egui::Frame::default().fill(PANEL).stroke(Stroke::new(1.0, Color32::from_rgb(37, 56, 88))).inner_margin(18.0).show(ui, |ui| {
+            egui::Frame::default().fill(PANEL).stroke(Stroke::new(1.0_f32, Color32::from_rgb(37, 56, 88))).inner_margin(18.0).show(ui, |ui| {
                 ui.label(RichText::new(self.text("连接你的 HTTP 代理", "Connect your HTTP proxy")).size(17.0).strong().color(Color32::WHITE));
                 ui.label(RichText::new(self.text("只填地址和端口，例如 192.168.1.100:8080。", "Enter only host and port, for example 192.168.1.100:8080.")).color(Color32::from_rgb(148, 163, 184)));
                 ui.add_space(8.0);
                 ui.add_sized([460.0, 32.0], egui::TextEdit::singleline(&mut self.settings.proxy_address).hint_text("192.168.1.100:8080"));
                 ui.add_space(10.0);
-                ui.checkbox(&mut self.settings.start_at_logon, self.text("登录后自动启动本机 PAC 服务", "Start the local PAC service after sign-in"));
+                let autostart_label = self.text("登录后自动启动本机 PAC 服务", "Start the local PAC service after sign-in").to_owned();
+                ui.checkbox(&mut self.settings.start_at_logon, autostart_label);
                 ui.add_space(12.0);
                 ui.horizontal(|ui| {
                     if ui.add_sized([250.0, 42.0], egui::Button::new(RichText::new(self.text("启用智能分流", "Enable smart routing")).strong()).fill(ACCENT)).clicked() { self.enable_split_routing(); }
@@ -192,7 +193,7 @@ impl eframe::App for SplitPacApp {
             });
             ui.add_space(12.0);
 
-            egui::Frame::default().fill(PANEL).stroke(Stroke::new(1.0, Color32::from_rgb(37, 56, 88))).inner_margin(18.0).show(ui, |ui| {
+            egui::Frame::default().fill(PANEL).stroke(Stroke::new(1.0_f32, Color32::from_rgb(37, 56, 88))).inner_margin(18.0).show(ui, |ui| {
                 ui.horizontal(|ui| {
                     ui.vertical(|ui| {
                         ui.label(RichText::new(self.text("分流测试", "Split-routing test")).size(17.0).strong().color(Color32::WHITE));
@@ -234,7 +235,7 @@ fn configure_visuals(ctx: &egui::Context) {
 
 fn status_card(ui: &mut egui::Ui, title: &str, active: bool, detail: &str) {
     let color = if active { SUCCESS } else { Color32::from_rgb(148, 163, 184) };
-    egui::Frame::default().fill(PANEL).stroke(Stroke::new(1.0, Color32::from_rgb(37, 56, 88))).inner_margin(14.0).show(ui, |ui| {
+    egui::Frame::default().fill(PANEL).stroke(Stroke::new(1.0_f32, Color32::from_rgb(37, 56, 88))).inner_margin(14.0).show(ui, |ui| {
         ui.label(RichText::new(title).strong().color(Color32::WHITE));
         ui.label(RichText::new(if active { "ACTIVE" } else { "OFFLINE" }).color(color).strong());
         ui.label(RichText::new(detail).small().color(Color32::from_rgb(148, 163, 184)));
