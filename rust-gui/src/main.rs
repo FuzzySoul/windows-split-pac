@@ -38,6 +38,7 @@ struct SplitPacApp {
     status_is_error: bool,
     service_online: bool,
     pac_enabled: bool,
+    backup_available: bool,
     last_test: Option<SplitTestResult>,
 }
 
@@ -56,6 +57,7 @@ impl SplitPacApp {
             status_is_error: false,
             service_online: false,
             pac_enabled: false,
+            backup_available: false,
             last_test: None,
         };
         app.refresh_status();
@@ -111,14 +113,15 @@ impl SplitPacApp {
             ));
             return;
         }
-        let result = self
+        let setup_result = self
             .save_rules()
             .and_then(|_| self.run_script("Install-Dependencies.ps1", &[]))
             .and_then(|_| self.run_script("Build-Pac.ps1", &["-ProxyAddress", &proxy]))
             .and_then(|_| self.run_script("Start-PacServer.ps1", &[]))
             .and_then(|_| self.run_script("Enable-WindowsPac.ps1", &["-PacUrl", DEFAULT_PAC_URL]));
 
-        if let Err(error) = result {
+        if let Err(error) = setup_result {
+            let _ = self.run_script("Stop-PacServer.ps1", &[]);
             self.fail(&error);
             return;
         }
@@ -128,13 +131,15 @@ impl SplitPacApp {
             "Uninstall-Autostart.ps1"
         };
         if let Err(error) = self.run_script(autostart, &[]) {
+            let _ = self.run_script("Disable-WindowsPac.ps1", &[]);
+            let _ = self.run_script("Stop-PacServer.ps1", &[]);
             self.fail(&error);
             return;
         }
         self.save_local_state();
         self.succeed(self.text(
-            "智能分流已启用：Windows 现在使用本机 PAC 设置。",
-            "Smart split routing is on: Windows now uses the local PAC configuration.",
+            "智能分流已启用：原有 Windows 代理设置已备份，可在关闭时恢复。",
+            "Smart split routing is on: your previous Windows proxy settings are backed up for restore.",
         ));
         self.refresh_status();
     }
@@ -146,8 +151,8 @@ impl SplitPacApp {
         {
             Ok(_) => {
                 self.succeed(self.text(
-                    "Windows PAC 和本机服务已关闭。",
-                    "Windows PAC and the local service are now off.",
+                    "Windows PAC 和本机服务已关闭；原有代理设置已恢复（如存在备份）。",
+                    "Windows PAC and the local service are off; previous proxy settings were restored when available.",
                 ));
                 self.refresh_status();
             }
@@ -184,11 +189,17 @@ impl SplitPacApp {
             .ok()
             .and_then(|json| serde_json::from_str::<SplitTestResult>(&json).ok())
             .is_some_and(|result| result.pac_server_healthy);
-        self.pac_enabled = self
+        let windows_status = self
             .run_script("Get-WindowsPacStatus.ps1", &[])
             .ok()
-            .and_then(|json| serde_json::from_str::<serde_json::Value>(&json).ok())
+            .and_then(|json| serde_json::from_str::<serde_json::Value>(&json).ok());
+        self.pac_enabled = windows_status
+            .as_ref()
             .and_then(|value| value.get("enabled").and_then(serde_json::Value::as_bool))
+            .unwrap_or(false);
+        self.backup_available = windows_status
+            .as_ref()
+            .and_then(|value| value.get("backup_available").and_then(serde_json::Value::as_bool))
             .unwrap_or(false);
     }
 
@@ -223,6 +234,7 @@ impl eframe::App for SplitPacApp {
             egui::Frame::default().fill(PANEL).stroke(Stroke::new(1.0_f32, Color32::from_rgb(37, 56, 88))).inner_margin(18.0).show(ui, |ui| {
                 ui.label(RichText::new(self.text("连接你的 HTTP 代理", "Connect your HTTP proxy")).size(17.0).strong().color(Color32::WHITE));
                 ui.label(RichText::new(self.text("只填地址和端口，例如 192.168.1.100:8080。", "Enter only host and port, for example 192.168.1.100:8080.")).color(Color32::from_rgb(148, 163, 184)));
+                ui.label(RichText::new(self.text("启用前会备份现有 Windows 代理设置；关闭时自动恢复。", "Your current Windows proxy settings are backed up before enabling and restored when disabled.")).color(Color32::from_rgb(148, 163, 184)));
                 ui.add_space(8.0);
                 ui.add_sized([460.0, 32.0], egui::TextEdit::singleline(&mut self.settings.proxy_address).hint_text("192.168.1.100:8080"));
                 ui.add_space(10.0);
@@ -237,10 +249,11 @@ impl eframe::App for SplitPacApp {
             });
 
             ui.add_space(12.0);
-            ui.columns(3, |columns| {
+            ui.columns(4, |columns| {
                 status_card(&mut columns[0], self.text("PAC 服务", "PAC service"), self.service_online, self.text("本机 8765 端口", "Local port 8765"));
                 status_card(&mut columns[1], self.text("Windows 设置", "Windows setting"), self.pac_enabled, self.text("自动代理脚本", "Automatic proxy script"));
-                status_card(&mut columns[2], self.text("开机自启", "Autostart"), self.settings.start_at_logon, self.text("登录后保持服务", "Keep service after sign-in"));
+                status_card(&mut columns[2], self.text("恢复保障", "Restore safety"), self.backup_available, self.text("原有设置已备份", "Previous settings backed up"));
+                status_card(&mut columns[3], self.text("开机自启", "Autostart"), self.settings.start_at_logon, self.text("登录后保持服务", "Keep service after sign-in"));
             });
             ui.add_space(12.0);
 

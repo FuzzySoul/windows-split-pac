@@ -7,6 +7,10 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $settingsPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings'
+
+# Preserve the user's settings once, so disabling this tool can restore them exactly.
+& (Join-Path $PSScriptRoot 'Save-WindowsProxyBackup.ps1')
+
 Set-ItemProperty -Path $settingsPath -Name AutoConfigURL -Value $PacUrl
 Set-ItemProperty -Path $settingsPath -Name ProxyEnable -Value 0
 Remove-ItemProperty -Path $settingsPath -Name ProxyServer -ErrorAction SilentlyContinue

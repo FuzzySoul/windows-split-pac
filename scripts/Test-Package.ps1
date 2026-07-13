@@ -23,6 +23,7 @@ function Get-PythonExecutable {
 try {
     Get-ChildItem -LiteralPath (Join-Path $root 'scripts') -Filter '*.ps1' -File | ForEach-Object { [ScriptBlock]::Create((Get-Content -LiteralPath $_.FullName -Raw)) | Out-Null }
     if (-not (Test-Path -LiteralPath (Join-Path $root 'rust-gui\Cargo.toml'))) { throw 'Rust GUI manifest is missing.' }
+    & (Join-Path $root 'scripts\Test-WindowsProxyBackup.ps1')
 
     New-Item -ItemType Directory -Force -Path $testRoot | Out-Null
     Set-Content -LiteralPath $rulesFile -Value '||example.com' -Encoding ascii
@@ -40,7 +41,7 @@ try {
     $result = & (Join-Path $root 'scripts\Test-SplitRouting.ps1') -PacFile $pacFile -Port $port -ProxyDomain 'example.com' -DirectDomain 'direct.example' | ConvertFrom-Json
     if (-not $result.split_routing_verified) { throw "Split routing test failed: proxy=$($result.proxy_decision), direct=$($result.direct_decision)" }
 
-    Write-Output 'PAC package test passed: generation, serving, MIME type, and routing decisions.'
+    Write-Output 'PAC package test passed: backup restore, generation, serving, MIME type, and routing decisions.'
 } finally {
     if ($process -and (Get-Process -Id $process.Id -ErrorAction SilentlyContinue)) { Stop-Process -Id $process.Id -Force }
     Remove-Item -LiteralPath $testRoot -Recurse -Force -ErrorAction SilentlyContinue

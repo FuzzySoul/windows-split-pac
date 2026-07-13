@@ -1,61 +1,91 @@
 # Windows Split PAC
 
+[![Continuous Integration](https://github.com/FuzzySoul/windows-split-pac/actions/workflows/ci.yml/badge.svg)](https://github.com/FuzzySoul/windows-split-pac/actions/workflows/ci.yml)
+[![Latest release](https://img.shields.io/github/v/release/FuzzySoul/windows-split-pac?display_name=tag)](https://github.com/FuzzySoul/windows-split-pac/releases)
+[![License](https://img.shields.io/github/license/FuzzySoul/windows-split-pac)](LICENSE)
+
 [简体中文](README.md) | [English](README.en.md)
 
-A native Rust desktop control center for GFWList PAC split routing. Matching sites and custom rules use an HTTP proxy; all other traffic stays direct. No Clash, Mihomo, SOCKS5, or manual proxy-setting steps.
+A native Windows split-routing control center. It builds a PAC file from GFWList and custom domain rules, sends matching sites to an HTTP proxy, and keeps the rest of the traffic direct. No Clash, Mihomo, or SOCKS5 is required, and existing Windows proxy settings are backed up before the tool changes them.
 
-## Simple workflow
+![Windows Split PAC workflow](assets/workflow.svg)
 
-1. Download the `WindowsSplitPAC` artifact from **Actions -> Build Windows Package** and extract it anywhere.
-2. Double-click `Start-WindowsSplitPAC.cmd`.
-3. Choose `简体中文` or `English` in the top-right corner.
-4. Enter the HTTP endpoint of Every Proxy, for example `192.168.1.100:8080`, without `http://`.
-5. Enable **Start the local PAC service after sign-in** if you want autostart.
-6. Click **Enable smart routing**. The app installs genpac, downloads GFWList, generates PAC, starts the local service, and applies the Windows automatic proxy-script setting.
-7. Click **Run split test**. A successful result shows one `PROXY` decision and one `DIRECT` decision.
+## Why it is different
 
-The active PAC URL is:
+- **One-click control**: install dependencies, build PAC, start the local service, and apply the Windows automatic proxy script from one dashboard.
+- **Recoverable by design**: the first enable operation saves the current user's PAC, manual proxy, bypass list, and auto-detect settings. Disable restores them.
+- **Verifiable routing**: Windows JScript evaluates the PAC and reports a real `PROXY` and `DIRECT` decision instead of merely checking that a process exists.
+- **Privacy-first**: proxy endpoints and proxy-setting backups stay under the Git-ignored local `data/` directory. No telemetry is collected.
+
+## Get started in three minutes
+
+1. Open [Releases](https://github.com/FuzzySoul/windows-split-pac/releases) and download `WindowsSplitPAC.zip` with its `.sha256` checksum file.
+2. Extract the ZIP anywhere. Optionally verify the download:
+
+   ```powershell
+   Get-FileHash .\WindowsSplitPAC.zip -Algorithm SHA256
+   ```
+
+3. Double-click `Start-WindowsSplitPAC.cmd` and select `简体中文` or `English`.
+4. Enter an Every Proxy HTTP endpoint such as `192.168.1.100:8080`, without `http://`.
+5. Enable autostart if needed, then select **Enable smart routing**.
+6. Select **Run split test** and confirm one domain returns `PROXY` while another returns `DIRECT`.
+
+When enabled, Windows uses:
 
 ```text
 http://127.0.0.1:8765/proxy.pac
 ```
 
-**Stop and disable routing** clears the Windows PAC setting and stops the local server. The dashboard always shows both Windows and local-service state.
+**Stop and disable routing** stops the local service and restores the backed-up Windows proxy settings. For an older installation without a backup, it removes only this tool's PAC URL and leaves existing manual proxy values untouched.
 
-## Included capabilities
+## Rules and scope
 
-- One-click GFWList routing for HTTP proxies.
-- Automatic Windows PAC application and refresh.
-- Autostart in the simple dashboard.
-- A real PAC decision test using Windows JScript.
-- Chinese/English UI, custom-rule editor, and diagnostics.
-- Local proxy addresses and settings remain under ignored `data/` files.
-
-## Custom rules
-
-Use the expandable custom-rules panel:
+GFWList is a proxy rule list, not a strict domestic/international website dictionary. Domains that do not match stay direct. Add custom rules in the dashboard's diagnostics panel:
 
 ```text
 ||example.com     # force proxy
 @@||example.com   # force direct
 ```
 
-Save and enable smart routing again to regenerate PAC. GFWList is a proxy rule list, not a strict country database; unmatched sites are direct.
+Save and enable smart routing again to regenerate the PAC. This project supports HTTP upstream proxies only; it does not configure SOCKS5, Clash, or Mihomo.
 
-## Diagnostics
+## Architecture
 
-The old “professional mode” has been removed because the dashboard contains the normal workflow. The remaining diagnostic panel is only for rule editing and test output. Command-line maintenance is still available:
+| Layer | Implementation | Responsibility |
+| --- | --- | --- |
+| Desktop control center | Rust + egui | Bilingual UI, state, rule editing, rollback |
+| PAC generation | genpac + GFWList | Compile rules into a PAC file |
+| Local service | Python | Serve PAC with the expected MIME type on `127.0.0.1:8765` |
+| Windows integration | PowerShell + WinINet | Save, apply, refresh, and restore current-user proxy settings |
+| Verification | PowerShell + JScript | Evaluate actual PAC `PROXY` / `DIRECT` decisions |
+
+## Quality gates
+
+Every push runs in a clean Windows runner:
+
+- Rust formatting, Clippy with warnings denied, and unit tests.
+- PAC isolation: PowerShell parsing, backup/restore against a temporary registry key, temporary PAC generation, HTTP/MIME checks, and real routing decisions.
+- Release delivery: a `v*` tag builds a portable ZIP, generates SHA-256, and creates a GitHub Release.
+
+Preview builds are available from **Actions -> Build Windows Package**. Prefer checksum-backed Release assets for normal use.
+
+## Build from source
+
+Install Python 3 and Rust stable, then run:
 
 ```powershell
-.\scripts\Test-Package.ps1
-.\scripts\Test-SplitRouting.ps1
-.\scripts\Disable-WindowsPac.ps1
+python -m pip install -r requirements.txt
+cargo run --release --manifest-path rust-gui\Cargo.toml
 ```
 
-## Build and test
+`scripts\Test-Package.ps1` performs isolated validation in a temporary directory and does not change Windows proxy settings.
 
-GitHub Actions uses clean Windows runners for a Rust quality gate (`fmt`, `clippy`, tests) and a separate PAC isolation test. The **Build Windows Package** workflow creates a portable ZIP artifact containing the native executable and helper scripts.
+## Contributing and security
 
-## License
+- [Contribution guide](CONTRIBUTING.md)
+- [Security policy and privacy notes](SECURITY.md)
+- [Changelog](CHANGELOG.md)
+- [MIT License](LICENSE)
 
-[MIT](LICENSE)
+Never include proxy endpoints, PAC files, cookies, passwords, or private-network data in issues and logs.
