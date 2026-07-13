@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="430" viewBox="0 0 1200 430" role="img" aria-labelledby="title desc">
+  <title id="title">Windows Split PAC 工作流程</title>
+  <desc id="desc">桌面应用生成 PAC 文件，在本机提供服务，配置 Windows 自动代理脚本，并验证实际分流决策。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#081225"/><stop offset="1" stop-color="#102a42"/></linearGradient>
+    <linearGradient id="accent" x1="0" x2="1"><stop stop-color="#22d3ee"/><stop offset="1" stop-color="#818cf8"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#020617" flood-opacity=".45"/></filter>
+  </defs>
+  <rect width="1200" height="430" rx="28" fill="url(#bg)"/>
+  <text x="64" y="68" fill="#f8fafc" font-family="Microsoft YaHei, Segoe UI, sans-serif" font-size="29" font-weight="700">Windows Split PAC</text>
+  <text x="64" y="98" fill="#94a3b8" font-family="Microsoft YaHei, Segoe UI, sans-serif" font-size="16">可验证、可恢复的 Windows 本地分流工作流</text>
+  <g filter="url(#shadow)" font-family="Microsoft YaHei, Segoe UI, sans-serif">
+    <rect x="64" y="155" width="220" height="150" rx="18" fill="#12213a" stroke="#27476b"/>
+    <text x="88" y="198" fill="#22d3ee" font-size="16" font-weight="700">01 / 控制</text>
+    <text x="88" y="230" fill="#f8fafc" font-size="21" font-weight="700">Rust 桌面界面</text>
+    <text x="88" y="262" fill="#94a3b8" font-size="14">规则、状态与恢复</text>
+    <rect x="360" y="155" width="220" height="150" rx="18" fill="#12213a" stroke="#27476b"/>
+    <text x="384" y="198" fill="#22d3ee" font-size="16" font-weight="700">02 / 生成</text>
+    <text x="384" y="230" fill="#f8fafc" font-size="21" font-weight="700">GFWList + genpac</text>
+    <text x="384" y="262" fill="#94a3b8" font-size="14">自定义规则编译为 PAC</text>
+    <rect x="656" y="155" width="220" height="150" rx="18" fill="#12213a" stroke="#27476b"/>
+    <text x="680" y="198" fill="#22d3ee" font-size="16" font-weight="700">03 / 托管</text>
+    <text x="680" y="230" fill="#f8fafc" font-size="21" font-weight="700">127.0.0.1 PAC</text>
+    <text x="680" y="262" fill="#94a3b8" font-size="14">本机 HTTP 服务</text>
+    <rect x="952" y="155" width="184" height="150" rx="18" fill="#12213a" stroke="#27476b"/>
+    <text x="976" y="198" fill="#22d3ee" font-size="16" font-weight="700">04 / 验证</text>
+    <text x="976" y="230" fill="#f8fafc" font-size="21" font-weight="700">Windows PAC</text>
+    <text x="976" y="262" fill="#94a3b8" font-size="14">PROXY / DIRECT</text>
+  </g>
+  <g stroke="url(#accent)" stroke-width="4" fill="none"><path d="M284 230h62"/><path d="M580 230h62"/><path d="M876 230h62"/></g>
+  <g fill="#22d3ee"><path d="m346 221 16 9-16 9z"/><path d="m642 221 16 9-16 9z"/><path d="m938 221 16 9-16 9z"/></g>
+  <rect x="64" y="350" width="1072" height="2" fill="#27476b"/>
+  <text x="64" y="386" fill="#a5f3fc" font-family="Microsoft YaHei, Segoe UI, sans-serif" font-size="15">先备份，后应用；实际验证 PAC 决策；关闭时恢复原有设置。</text>
+</svg>

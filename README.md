@@ -8,7 +8,7 @@
 
 Windows 原生分流控制台：使用 GFWList 与自定义域名规则生成 PAC，将命中的站点交给 HTTP 代理，其余流量保持直连。它不需要 Clash、Mihomo 或 SOCKS5，并且会在启用前备份现有 Windows 代理设置。
 
-![Windows Split PAC 工作流](assets/workflow.svg)
+![Windows Split PAC 工作流](assets/workflow.zh-CN.svg)
 
 ## 为什么使用它
 
