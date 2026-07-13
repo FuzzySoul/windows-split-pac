@@ -4,6 +4,12 @@ All notable changes to Windows Split PAC are documented here.
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-07-13
+
+### Fixed
+
+- Embedded Noto Sans SC in the native GUI so Simplified Chinese renders correctly in portable releases.
+
 ## [0.3.1] - 2026-07-13
 
 ### Changed

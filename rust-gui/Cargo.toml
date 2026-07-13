@@ -1,6 +1,6 @@
 [package]
 name = "windows-split-pac-gui"
-version = "0.3.1"
+version = "0.3.2"
 edition = "2024"
 description = "A native Windows control center for GFWList PAC split routing"
 license = "MIT"
