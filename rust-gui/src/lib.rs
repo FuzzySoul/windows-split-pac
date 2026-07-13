@@ -28,7 +28,9 @@ pub struct SplitTestResult {
 
 pub fn is_valid_proxy_address(value: &str) -> bool {
     let value = value.trim();
-    let Some((host, port)) = value.rsplit_once(':') else { return false; };
+    let Some((host, port)) = value.rsplit_once(':') else {
+        return false;
+    };
     !host.is_empty()
         && !host.contains("://")
         && !host.contains(char::is_whitespace)

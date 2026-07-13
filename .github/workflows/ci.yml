@@ -23,18 +23,12 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
-      - name: Normalize formatting for verification
-        run: cargo fmt --all
+      - name: Check formatting
+        run: cargo fmt --all -- --check
       - name: Run Clippy
         run: cargo clippy --all-targets -- -D warnings
       - name: Run Rust tests
         run: cargo test --all-targets
-      - name: Export rustfmt source
-        uses: actions/upload-artifact@v4
-        with:
-          name: rustfmt-source
-          path: rust-gui/src
-          if-no-files-found: error
 
   pac-isolation:
     name: PAC isolation test

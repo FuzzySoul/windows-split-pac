@@ -1,7 +1,13 @@
-use std::{fs, path::{Path, PathBuf}, process::Command};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+    process::Command,
+};
 
 use eframe::egui::{self, Color32, RichText, Stroke};
-use windows_split_pac_gui::{is_valid_proxy_address, Language, SplitTestResult, UiSettings, DEFAULT_PAC_URL};
+use windows_split_pac_gui::{
+    DEFAULT_PAC_URL, Language, SplitTestResult, UiSettings, is_valid_proxy_address,
+};
 
 const ACCENT: Color32 = Color32::from_rgb(34, 211, 238);
 const SUCCESS: Color32 = Color32::from_rgb(74, 222, 128);
@@ -40,7 +46,8 @@ impl SplitPacApp {
         configure_visuals(&creation_context.egui_ctx);
         let root = find_project_root();
         let settings = load_settings(&root);
-        let custom_rules = fs::read_to_string(root.join("rules/user-rules.txt")).unwrap_or_default();
+        let custom_rules =
+            fs::read_to_string(root.join("rules/user-rules.txt")).unwrap_or_default();
         let mut app = Self {
             root,
             settings,
@@ -56,7 +63,11 @@ impl SplitPacApp {
     }
 
     fn text<'a>(&self, chinese: &'a str, english: &'a str) -> &'a str {
-        if self.settings.language == Language::Chinese { chinese } else { english }
+        if self.settings.language == Language::Chinese {
+            chinese
+        } else {
+            english
+        }
     }
 
     fn save_local_state(&self) {
@@ -82,13 +93,22 @@ impl SplitPacApp {
             .map_err(|error| format!("Could not start {name}: {error}"))?;
         let stdout = String::from_utf8_lossy(&output.stdout).trim().to_owned();
         let stderr = String::from_utf8_lossy(&output.stderr).trim().to_owned();
-        if output.status.success() { Ok(stdout) } else if stderr.is_empty() { Err(stdout) } else { Err(stderr) }
+        if output.status.success() {
+            Ok(stdout)
+        } else if stderr.is_empty() {
+            Err(stdout)
+        } else {
+            Err(stderr)
+        }
     }
 
     fn enable_split_routing(&mut self) {
         let proxy = self.settings.proxy_address.trim().to_owned();
         if !is_valid_proxy_address(&proxy) {
-            self.fail(self.text("请输入有效的 HTTP 代理地址，例如 192.168.1.100:8080。", "Enter a valid HTTP proxy address, for example 192.168.1.100:8080."));
+            self.fail(self.text(
+                "请输入有效的 HTTP 代理地址，例如 192.168.1.100:8080。",
+                "Enter a valid HTTP proxy address, for example 192.168.1.100:8080.",
+            ));
             return;
         }
         let result = self
@@ -102,20 +122,33 @@ impl SplitPacApp {
             self.fail(&error);
             return;
         }
-        let autostart = if self.settings.start_at_logon { "Install-Autostart.ps1" } else { "Uninstall-Autostart.ps1" };
+        let autostart = if self.settings.start_at_logon {
+            "Install-Autostart.ps1"
+        } else {
+            "Uninstall-Autostart.ps1"
+        };
         if let Err(error) = self.run_script(autostart, &[]) {
             self.fail(&error);
             return;
         }
         self.save_local_state();
-        self.succeed(self.text("智能分流已启用：Windows 现在使用本机 PAC 设置。", "Smart split routing is on: Windows now uses the local PAC configuration."));
+        self.succeed(self.text(
+            "智能分流已启用：Windows 现在使用本机 PAC 设置。",
+            "Smart split routing is on: Windows now uses the local PAC configuration.",
+        ));
         self.refresh_status();
     }
 
     fn disable_split_routing(&mut self) {
-        match self.run_script("Disable-WindowsPac.ps1", &[]).and_then(|_| self.run_script("Stop-PacServer.ps1", &[])) {
+        match self
+            .run_script("Disable-WindowsPac.ps1", &[])
+            .and_then(|_| self.run_script("Stop-PacServer.ps1", &[]))
+        {
             Ok(_) => {
-                self.succeed(self.text("Windows PAC 和本机服务已关闭。", "Windows PAC and the local service are now off."));
+                self.succeed(self.text(
+                    "Windows PAC 和本机服务已关闭。",
+                    "Windows PAC and the local service are now off.",
+                ));
                 self.refresh_status();
             }
             Err(error) => self.fail(&error),
@@ -128,8 +161,16 @@ impl SplitPacApp {
                 Ok(result) => {
                     let passed = result.split_routing_verified;
                     self.last_test = Some(result);
-                    if passed { self.succeed(self.text("分流规则验证通过。", "Split-routing rules verified.")); }
-                    else { self.fail(self.text("分流规则未通过验证。", "Split-routing rules did not verify.")); }
+                    if passed {
+                        self.succeed(
+                            self.text("分流规则验证通过。", "Split-routing rules verified."),
+                        );
+                    } else {
+                        self.fail(self.text(
+                            "分流规则未通过验证。",
+                            "Split-routing rules did not verify.",
+                        ));
+                    }
                 }
                 Err(error) => self.fail(&format!("Could not parse split test result: {error}")),
             },
@@ -138,17 +179,27 @@ impl SplitPacApp {
     }
 
     fn refresh_status(&mut self) {
-        self.service_online = self.run_script("Test-SplitRouting.ps1", &[]).ok()
+        self.service_online = self
+            .run_script("Test-SplitRouting.ps1", &[])
+            .ok()
             .and_then(|json| serde_json::from_str::<SplitTestResult>(&json).ok())
             .is_some_and(|result| result.pac_server_healthy);
-        self.pac_enabled = self.run_script("Get-WindowsPacStatus.ps1", &[]).ok()
+        self.pac_enabled = self
+            .run_script("Get-WindowsPacStatus.ps1", &[])
+            .ok()
             .and_then(|json| serde_json::from_str::<serde_json::Value>(&json).ok())
             .and_then(|value| value.get("enabled").and_then(serde_json::Value::as_bool))
             .unwrap_or(false);
     }
 
-    fn succeed(&mut self, message: &str) { self.status = message.to_owned(); self.status_is_error = false; }
-    fn fail(&mut self, message: &str) { self.status = message.to_owned(); self.status_is_error = true; }
+    fn succeed(&mut self, message: &str) {
+        self.status = message.to_owned();
+        self.status_is_error = false;
+    }
+    fn fail(&mut self, message: &str) {
+        self.status = message.to_owned();
+        self.status_is_error = true;
+    }
 }
 
 impl eframe::App for SplitPacApp {
@@ -234,22 +285,43 @@ fn configure_visuals(ctx: &egui::Context) {
 }
 
 fn status_card(ui: &mut egui::Ui, title: &str, active: bool, detail: &str) {
-    let color = if active { SUCCESS } else { Color32::from_rgb(148, 163, 184) };
-    egui::Frame::default().fill(PANEL).stroke(Stroke::new(1.0_f32, Color32::from_rgb(37, 56, 88))).inner_margin(14.0).show(ui, |ui| {
-        ui.label(RichText::new(title).strong().color(Color32::WHITE));
-        ui.label(RichText::new(if active { "ACTIVE" } else { "OFFLINE" }).color(color).strong());
-        ui.label(RichText::new(detail).small().color(Color32::from_rgb(148, 163, 184)));
-    });
+    let color = if active {
+        SUCCESS
+    } else {
+        Color32::from_rgb(148, 163, 184)
+    };
+    egui::Frame::default()
+        .fill(PANEL)
+        .stroke(Stroke::new(1.0_f32, Color32::from_rgb(37, 56, 88)))
+        .inner_margin(14.0)
+        .show(ui, |ui| {
+            ui.label(RichText::new(title).strong().color(Color32::WHITE));
+            ui.label(
+                RichText::new(if active { "ACTIVE" } else { "OFFLINE" })
+                    .color(color)
+                    .strong(),
+            );
+            ui.label(
+                RichText::new(detail)
+                    .small()
+                    .color(Color32::from_rgb(148, 163, 184)),
+            );
+        });
 }
 
 fn find_project_root() -> PathBuf {
     let executable = std::env::current_exe().unwrap_or_default();
     for directory in executable.ancestors() {
-        if directory.join("scripts").is_dir() && directory.join("rules").is_dir() { return directory.to_path_buf(); }
+        if directory.join("scripts").is_dir() && directory.join("rules").is_dir() {
+            return directory.to_path_buf();
+        }
     }
     std::env::current_dir().unwrap_or_else(|_| Path::new(".").to_path_buf())
 }
 
 fn load_settings(root: &Path) -> UiSettings {
-    fs::read_to_string(root.join("data/ui-settings.json")).ok().and_then(|content| serde_json::from_str(&content).ok()).unwrap_or_default()
+    fs::read_to_string(root.join("data/ui-settings.json"))
+        .ok()
+        .and_then(|content| serde_json::from_str(&content).ok())
+        .unwrap_or_default()
 }
