@@ -199,7 +199,11 @@ impl SplitPacApp {
             .unwrap_or(false);
         self.backup_available = windows_status
             .as_ref()
-            .and_then(|value| value.get("backup_available").and_then(serde_json::Value::as_bool))
+            .and_then(|value| {
+                value
+                    .get("backup_available")
+                    .and_then(serde_json::Value::as_bool)
+            })
             .unwrap_or(false);
     }
 
