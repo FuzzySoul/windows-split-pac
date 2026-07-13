@@ -61,10 +61,10 @@ impl SplitPacApp {
 
     fn save_local_state(&self) {
         let data_dir = self.root.join("data");
-        if fs::create_dir_all(&data_dir).is_ok() {
-            if let Ok(serialized) = serde_json::to_string_pretty(&self.settings) {
-                let _ = fs::write(data_dir.join("ui-settings.json"), serialized);
-            }
+        if fs::create_dir_all(&data_dir).is_ok()
+            && let Ok(serialized) = serde_json::to_string_pretty(&self.settings)
+        {
+            let _ = fs::write(data_dir.join("ui-settings.json"), serialized);
         }
     }
 
