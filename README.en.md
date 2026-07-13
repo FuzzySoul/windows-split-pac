@@ -10,10 +10,6 @@ A native Windows split-routing control center. It builds a PAC file from GFWList
 
 ![Windows Split PAC workflow](assets/workflow.svg)
 
-![Windows Split PAC real GUI demo](assets/demo.gif)
-
-This is a recording of the real v0.3.2 GUI, showing safe recovery, routing verification, and custom-rule entry points. Recording it does not change Windows proxy settings.
-
 ## Why it is different
 
 - **One-click control**: install dependencies, build PAC, start the local service, and apply the Windows automatic proxy script from one dashboard.

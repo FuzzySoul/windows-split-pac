@@ -10,10 +10,6 @@ Windows 原生分流控制台：使用 GFWList 与自定义域名规则生成 PA
 
 ![Windows Split PAC 工作流](assets/workflow.zh-CN.svg)
 
-![Windows Split PAC 真实 GUI 演示](assets/demo.gif)
-
-上图为 v0.3.2 的真实 GUI 录制，展示安全恢复、分流验证和自定义规则入口；录制没有修改系统代理设置。
-
 ## 为什么使用它
 
 - **一键控制**：输入 HTTP 代理地址后，自动安装依赖、生成 PAC、启动本机服务并配置 Windows 自动代理脚本。
