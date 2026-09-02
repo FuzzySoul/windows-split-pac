@@ -340,7 +340,10 @@ impl PacEngine {
     /// Human-readable reason for a failed apply: prefer the structured errors
     /// the script writes to its result file on failure, then the tail of the
     /// captured stderr log, and only fall back to the generic message.
-    fn apply_failure_reason(result_file: &std::path::Path, stderr_file: &std::path::Path) -> String {
+    fn apply_failure_reason(
+        result_file: &std::path::Path,
+        stderr_file: &std::path::Path,
+    ) -> String {
         if let Ok(json) = fs::read_to_string(result_file)
             && let Ok(report) = Self::parse_apply_report(&json)
             && !report.errors.is_empty()
@@ -716,18 +719,24 @@ mod tests {
 
         // With nothing captured at all, fall back to a generic message.
         fs::remove_file(&stderr_file).unwrap();
-        assert!(PacEngine::apply_failure_reason(&result_file, &stderr_file)
-            .starts_with("Apply-PacConfig.ps1 failed"));
+        assert!(
+            PacEngine::apply_failure_reason(&result_file, &stderr_file)
+                .starts_with("Apply-PacConfig.ps1 failed")
+        );
     }
 
     #[test]
     fn pac_engine_resolves_scripts_relative_to_root() {
         // Compare path COMPONENTS so the assertion holds on both / and \ hosts.
         let engine = PacEngine::new("/repo/windows-split-pac");
-        assert!(std::path::Path::new(&engine.script("Apply-PacConfig.ps1"))
-            .ends_with("windows-split-pac/scripts/Apply-PacConfig.ps1"));
-        assert!(std::path::Path::new(&engine.script("Get-ServiceIdentity.ps1"))
-            .ends_with("windows-split-pac/scripts/Get-ServiceIdentity.ps1"));
+        assert!(
+            std::path::Path::new(&engine.script("Apply-PacConfig.ps1"))
+                .ends_with("windows-split-pac/scripts/Apply-PacConfig.ps1")
+        );
+        assert!(
+            std::path::Path::new(&engine.script("Get-ServiceIdentity.ps1"))
+                .ends_with("windows-split-pac/scripts/Get-ServiceIdentity.ps1")
+        );
     }
 
     #[test]

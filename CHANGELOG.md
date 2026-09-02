@@ -4,6 +4,13 @@ All notable changes to Windows Split PAC are documented here.
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-09-02
+
+### Fixed
+
+- The GUI now shows the real error when an apply fails (e.g. missing genpac) instead of the generic "Apply-PacConfig.ps1 failed (see PowerShell errors)" message: Apply-PacConfig.ps1 writes its structured result on failure, and the engine reads it (with a captured PowerShell stderr tail as fallback).
+- Fixed a Windows-only unit-test failure in path resolution assertions.
+
 ## [0.3.2] - 2026-07-13
 
 ### Fixed
