@@ -1,0 +1,8 @@
+! Custom proxy rules (Adblock Plus / GFWList syntax)
+! Lines beginning with ! are comments.
+!
+! Send an entire domain through the proxy:
+! ||example.com
+!
+! Keep a domain direct even if GFWList matches it:
+! @@||example.com

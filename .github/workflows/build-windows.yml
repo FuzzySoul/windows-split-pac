@@ -1,0 +1,52 @@
+name: Build Windows Package
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    name: Build portable Windows package
+    runs-on: windows-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v7
+      - name: Install stable Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Build release executable
+        run: cargo build --release --manifest-path rust-gui\Cargo.toml
+      - name: Assemble portable package
+        shell: pwsh
+        run: |
+          $package = 'release/WindowsSplitPAC'
+          New-Item -ItemType Directory -Force $package | Out-Null
+          Copy-Item rust-gui/target/release/windows-split-pac-gui.exe $package/
+          New-Item -ItemType Directory -Force "$package/rust-gui" | Out-Null
+          Copy-Item rust-gui/Cargo.toml, rust-gui/Cargo.lock "$package/rust-gui/"
+          Copy-Item Start-WindowsSplitPAC.cmd, README.md, README.en.md, LICENSE, CHANGELOG.md, SECURITY.md, THIRD_PARTY_NOTICES.md $package/
+          Copy-Item assets, scripts, rules, src $package/ -Recurse
+          Compress-Archive -Path "$package/*" -DestinationPath release/WindowsSplitPAC.zip -Force
+      - name: Generate SHA-256 checksum
+        shell: pwsh
+        run: |
+          $hash = (Get-FileHash release/WindowsSplitPAC.zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash *WindowsSplitPAC.zip" | Set-Content release/WindowsSplitPAC.zip.sha256 -Encoding ascii -NoNewline
+      - name: Upload portable package
+        uses: actions/upload-artifact@v7
+        with:
+          name: WindowsSplitPAC
+          path: |
+            release/WindowsSplitPAC.zip
+            release/WindowsSplitPAC.zip.sha256
+          if-no-files-found: error
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          gh release create "$env:GITHUB_REF_NAME" release/WindowsSplitPAC.zip release/WindowsSplitPAC.zip.sha256 --generate-notes --title "Windows Split PAC $env:GITHUB_REF_NAME"

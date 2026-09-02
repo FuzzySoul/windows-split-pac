@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title desc">
+  <title id="title">Windows Split PAC 社交分享卡片</title>
+  <desc id="desc">一张介绍 Windows Split PAC 的中文社交分享图。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#071426"/><stop offset=".55" stop-color="#102a42"/><stop offset="1" stop-color="#1e1b4b"/></linearGradient>
+    <linearGradient id="line" x1="0" x2="1"><stop stop-color="#22d3ee"/><stop offset="1" stop-color="#818cf8"/></linearGradient>
+  </defs>
+  <rect width="1280" height="640" fill="url(#bg)"/>
+  <circle cx="1090" cy="120" r="230" fill="#22d3ee" opacity=".08"/>
+  <circle cx="1170" cy="540" r="280" fill="#818cf8" opacity=".11"/>
+  <rect x="74" y="78" width="152" height="42" rx="21" fill="#153753" stroke="#22d3ee"/>
+  <text x="101" y="106" fill="#a5f3fc" font-family="Microsoft YaHei, Segoe UI, sans-serif" font-size="18" font-weight="700">RUST / WINDOWS</text>
+  <text x="74" y="205" fill="#f8fafc" font-family="Microsoft YaHei, Segoe UI, sans-serif" font-size="58" font-weight="700">Windows Split PAC</text>
+  <text x="78" y="260" fill="#cbd5e1" font-family="Microsoft YaHei, Segoe UI, sans-serif" font-size="27">可验证、可恢复的一键 PAC 分流控制台</text>
+  <rect x="74" y="310" width="760" height="3" fill="url(#line)"/>
+  <g font-family="Microsoft YaHei, Segoe UI, sans-serif" font-size="23">
+    <text x="90" y="375" fill="#e2e8f0">01  GFWList + 自定义规则生成 PAC</text>
+    <text x="90" y="425" fill="#e2e8f0">02  自动配置 Windows PAC 并备份旧设置</text>
+    <text x="90" y="475" fill="#e2e8f0">03  用实际 PROXY / DIRECT 决策验证分流</text>
+  </g>
+  <g transform="translate(930 225)">
+    <rect width="245" height="205" rx="24" fill="#11243d" stroke="#2a5c83" stroke-width="2"/>
+    <text x="28" y="55" fill="#22d3ee" font-family="Segoe UI, sans-serif" font-size="18" font-weight="700">ROUTING TEST</text>
+    <rect x="28" y="85" width="190" height="37" rx="10" fill="#153b50"/>
+    <text x="43" y="110" fill="#86efac" font-family="Segoe UI, sans-serif" font-size="17" font-weight="700">example.com  PROXY</text>
+    <rect x="28" y="136" width="190" height="37" rx="10" fill="#1e293b"/>
+    <text x="43" y="161" fill="#a5f3fc" font-family="Segoe UI, sans-serif" font-size="17" font-weight="700">direct.example  DIRECT</text>
+  </g>
+  <text x="76" y="575" fill="#94a3b8" font-family="Segoe UI, sans-serif" font-size="19">github.com/FuzzySoul/windows-split-pac</text>
+</svg>

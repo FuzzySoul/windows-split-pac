@@ -1,0 +1,10 @@
+[package]
+name = "windows-split-pac-core"
+version = "0.3.2"
+edition = "2024"
+description = "Pure (GUI-independent) logic for windows-split-pac: service identity, engine abstraction, PAC engine. No eframe dependency so it unit-tests headless."
+license = "MIT"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
