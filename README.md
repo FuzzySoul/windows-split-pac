@@ -12,7 +12,7 @@ Windows 原生分流控制台：使用 GFWList 与自定义域名规则生成 PA
 
 ## 为什么使用它
 
-- **一键控制**：输入 HTTP 代理地址后，自动安装依赖、生成 PAC、启动本机服务并配置 Windows 自动代理脚本。
+- **一键控制**：启动器会检查经过验证的 PAC 依赖，输入 HTTP 代理地址后即可生成 PAC、启动本机服务并配置 Windows 自动代理脚本。
 - **可恢复**：首次启用时备份当前用户的 PAC、手动代理、例外列表和自动检测设置；关闭时自动恢复。
 - **可验证**：使用 Windows JScript 实际执行 PAC，显示一个 `PROXY` 与一个 `DIRECT` 决策，而不是只检查进程是否运行。
 - **隐私优先**：代理地址和代理设置备份仅保存在被 Git 忽略的本地 `data/` 目录；项目不收集遥测数据。
@@ -26,7 +26,7 @@ Windows 原生分流控制台：使用 GFWList 与自定义域名规则生成 PA
    Get-FileHash .\WindowsSplitPAC.zip -Algorithm SHA256
    ```
 
-3. 双击 `Start-WindowsSplitPAC.cmd`，选择 `简体中文` 或 `English`。
+3. 双击 `Start-WindowsSplitPAC.cmd`。启动器会检查 Python 3 与锁定版本的 `genpac`，缺失时自动安装依赖，然后启动 `app\windows-split-pac-gui.exe`。
 4. 输入手机 Every Proxy 的 HTTP 地址，例如 `192.168.1.100:8080`，不要输入 `http://`。
 5. 需要登录后保持服务时，勾选开机自启，然后点击“启用智能分流”。
 6. 点击“测试是否分流”，确认命中域名显示 `PROXY`、直连域名显示 `DIRECT`。
@@ -62,11 +62,12 @@ GFWList 是代理规则列表，并不是严格的“国内/国外网站字典�
 
 ## 质量保证
 
-每次推送都会在干净的 Windows Runner 上运行：
+每次推送或 PR 都会在干净的 Windows Runner 上运行：
 
 - Rust：`cargo fmt --check`、`cargo clippy -D warnings`、单元测试。
 - PAC：PowerShell 入口解析、临时注册表项中的备份恢复测试、临时 PAC 生成、HTTP/MIME 校验和真实路由决策测试。
-- 发布：推送 `v*` 标签时构建可携带 ZIP、生成 SHA-256，并自动创建 GitHub Release。
+- 成品包：真实构建 `WindowsSplitPAC.zip`，解压到新的临时目录，再从解压后的发布目录运行依赖检查和 PAC 运行时测试。
+- 发布：只有 `main` 的 Continuous Integration 全部通过后，CD 才会针对那个已测试提交创建版本标签、SHA-256 与 GitHub Release；手动运行 Build Windows Package 只生成预览包，不会发布正式版本。
 
 预览构建可从 **Actions -> Build Windows Package** 获取；正式使用请优先下载 Releases 中带校验文件的版本。
 
@@ -75,11 +76,11 @@ GFWList 是代理规则列表，并不是严格的“国内/国外网站字典�
 安装 Python 3 与 Rust stable 后：
 
 ```powershell
-python -m pip install -r requirements.txt
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install-Dependencies.ps1
 cargo run --release --manifest-path rust-gui\Cargo.toml
 ```
 
-运行 `scripts\Test-Package.ps1` 可在临时目录完成隔离验证，不会修改 Windows 代理设置。
+运行 `scripts\Test-Package.ps1` 可在临时目录完成隔离验证，不会修改 Windows 代理设置；`scripts\Build-ReleasePackage.ps1` 和 `scripts\Test-ReleasePackage.ps1` 分别负责构建与验证正式可携带包。
 
 ## 参与与安全
 
