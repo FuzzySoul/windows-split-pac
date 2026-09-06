@@ -4,6 +4,21 @@ All notable changes to Windows Split PAC are documented here.
 
 ## [Unreleased]
 
+## [0.3.4] - 2026-09-06
+
+### Fixed
+
+- Repaired the portable release layout so `Start-WindowsSplitPAC.cmd` launches the packaged GUI from `app\windows-split-pac-gui.exe` instead of falling through to a broken source-build path.
+- Added `requirements.txt` to portable releases and pinned the tested PAC generator to `genpac==3.0.1`.
+- Made dependency bootstrap idempotent: an already-correct genpac installation is reused, while missing or mismatched versions are installed from the pinned requirements file.
+- Removed the generated GUI executable from source control to prevent the checked-in binary from drifting behind the Rust source.
+
+### Changed
+
+- Added a single `Build-ReleasePackage.ps1` path for assembling ZIP releases and SHA-256 checksums.
+- CI now builds, extracts, and tests the actual portable ZIP instead of validating only the source checkout.
+- GitHub Releases are now published only from a successful `main` Continuous Integration run. The CD workflow tags and publishes the exact tested commit, while manual runs remain preview builds only.
+
 ## [0.3.3] - 2026-09-02
 
 ### Fixed
