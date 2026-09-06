@@ -21,8 +21,16 @@ function Get-PythonExecutable {
 }
 
 try {
-    Get-ChildItem -LiteralPath (Join-Path $root 'scripts') -Filter '*.ps1' -File | ForEach-Object { [ScriptBlock]::Create((Get-Content -LiteralPath $_.FullName -Raw)) | Out-Null }
-    if (-not (Test-Path -LiteralPath (Join-Path $root 'rust-gui\Cargo.toml'))) { throw 'Rust GUI manifest is missing.' }
+    Get-ChildItem -LiteralPath (Join-Path $root 'scripts') -Filter '*.ps1' -File | ForEach-Object {
+        [ScriptBlock]::Create((Get-Content -LiteralPath $_.FullName -Raw)) | Out-Null
+    }
+
+    foreach ($relative in @('requirements.txt', 'src\pac_server.py', 'rules\user-rules.txt')) {
+        if (-not (Test-Path -LiteralPath (Join-Path $root $relative))) {
+            throw "Runtime package input is missing: $relative"
+        }
+    }
+
     & (Join-Path $root 'scripts\Test-WindowsProxyBackup.ps1')
 
     New-Item -ItemType Directory -Force -Path $testRoot | Out-Null
@@ -34,15 +42,26 @@ try {
     $process = Start-Process -FilePath $python -ArgumentList @("`"$serverScript`"", '--pac-file', "`"$pacFile`"", '--port', $port) -WindowStyle Hidden -PassThru
     $response = $null
     foreach ($attempt in 1..20) {
-        try { $response = Invoke-WebRequest -UseBasicParsing -Uri "http://127.0.0.1:$port/proxy.pac" -TimeoutSec 1; break } catch { Start-Sleep -Milliseconds 150 }
+        try {
+            $response = Invoke-WebRequest -UseBasicParsing -Uri "http://127.0.0.1:$port/proxy.pac" -TimeoutSec 1
+            break
+        } catch {
+            Start-Sleep -Milliseconds 150
+        }
     }
-    if (-not $response -or $response.StatusCode -ne 200 -or $response.Headers['Content-Type'] -notmatch 'application/x-ns-proxy-autoconfig') { throw 'PAC server did not return the expected response and MIME type.' }
+    if (-not $response -or $response.StatusCode -ne 200 -or $response.Headers['Content-Type'] -notmatch 'application/x-ns-proxy-autoconfig') {
+        throw 'PAC server did not return the expected response and MIME type.'
+    }
 
     $result = & (Join-Path $root 'scripts\Test-SplitRouting.ps1') -PacFile $pacFile -Port $port -ProxyDomain 'example.com' -DirectDomain 'direct.example' | ConvertFrom-Json
-    if (-not $result.split_routing_verified) { throw "Split routing test failed: proxy=$($result.proxy_decision), direct=$($result.direct_decision)" }
+    if (-not $result.split_routing_verified) {
+        throw "Split routing test failed: proxy=$($result.proxy_decision), direct=$($result.direct_decision)"
+    }
 
     Write-Output 'PAC package test passed: backup restore, generation, serving, MIME type, and routing decisions.'
 } finally {
-    if ($process -and (Get-Process -Id $process.Id -ErrorAction SilentlyContinue)) { Stop-Process -Id $process.Id -Force }
+    if ($process -and (Get-Process -Id $process.Id -ErrorAction SilentlyContinue)) {
+        Stop-Process -Id $process.Id -Force
+    }
     Remove-Item -LiteralPath $testRoot -Recurse -Force -ErrorAction SilentlyContinue
 }
