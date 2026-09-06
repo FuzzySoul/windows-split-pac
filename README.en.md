@@ -12,7 +12,7 @@ A native Windows split-routing control center. It builds a PAC file from GFWList
 
 ## Why it is different
 
-- **One-click control**: install dependencies, build PAC, start the local service, and apply the Windows automatic proxy script from one dashboard.
+- **One-click control**: the launcher verifies the tested PAC dependency set, then the dashboard builds the PAC, starts the local service, and applies the Windows automatic proxy script.
 - **Recoverable by design**: the first enable operation saves the current user's PAC, manual proxy, bypass list, and auto-detect settings. Disable restores them.
 - **Verifiable routing**: Windows JScript evaluates the PAC and reports a real `PROXY` and `DIRECT` decision instead of merely checking that a process exists.
 - **Privacy-first**: proxy endpoints and proxy-setting backups stay under the Git-ignored local `data/` directory. No telemetry is collected.
@@ -26,7 +26,7 @@ A native Windows split-routing control center. It builds a PAC file from GFWList
    Get-FileHash .\WindowsSplitPAC.zip -Algorithm SHA256
    ```
 
-3. Double-click `Start-WindowsSplitPAC.cmd` and select `简体中文` or `English`.
+3. Double-click `Start-WindowsSplitPAC.cmd`. The launcher checks Python 3 and the pinned `genpac` version, installs the tested dependency set when needed, then starts `app\windows-split-pac-gui.exe`.
 4. Enter an Every Proxy HTTP endpoint such as `192.168.1.100:8080`, without `http://`.
 5. Enable autostart if needed, then select **Enable smart routing**.
 6. Select **Run split test** and confirm one domain returns `PROXY` while another returns `DIRECT`.
@@ -62,11 +62,12 @@ Save and enable smart routing again to regenerate the PAC. This project supports
 
 ## Quality gates
 
-Every push runs in a clean Windows runner:
+Every push or pull request runs in a clean Windows runner:
 
 - Rust formatting, Clippy with warnings denied, and unit tests.
 - PAC isolation: PowerShell parsing, backup/restore against a temporary registry key, temporary PAC generation, HTTP/MIME checks, and real routing decisions.
-- Release delivery: a `v*` tag builds a portable ZIP, generates SHA-256, and creates a GitHub Release.
+- Portable artifact: CI builds the real `WindowsSplitPAC.zip`, extracts it into a fresh temporary directory, and runs dependency plus PAC runtime checks from the extracted package.
+- Release delivery: CD runs only after `main` Continuous Integration succeeds. It tags and publishes the exact tested commit with SHA-256 assets; manual **Build Windows Package** runs remain preview-only and never create a formal release.
 
 Preview builds are available from **Actions -> Build Windows Package**. Prefer checksum-backed Release assets for normal use.
 
@@ -75,11 +76,11 @@ Preview builds are available from **Actions -> Build Windows Package**. Prefer c
 Install Python 3 and Rust stable, then run:
 
 ```powershell
-python -m pip install -r requirements.txt
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install-Dependencies.ps1
 cargo run --release --manifest-path rust-gui\Cargo.toml
 ```
 
-`scripts\Test-Package.ps1` performs isolated validation in a temporary directory and does not change Windows proxy settings.
+`scripts\Test-Package.ps1` performs isolated validation in a temporary directory and does not change Windows proxy settings. `scripts\Build-ReleasePackage.ps1` and `scripts\Test-ReleasePackage.ps1` build and validate the portable release artifact.
 
 ## Contributing and security
 
