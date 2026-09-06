@@ -2,8 +2,10 @@ name: Build Windows Package
 
 on:
   workflow_dispatch:
-  push:
-    tags: ['v*']
+  workflow_run:
+    workflows: ['Continuous Integration']
+    types: [completed]
+    branches: [main]
 
 permissions:
   contents: write
@@ -11,42 +13,87 @@ permissions:
 jobs:
   package:
     name: Build portable Windows package
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: windows-latest
     steps:
-      - name: Checkout source
+      - name: Checkout tested source
         uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+          fetch-depth: 0
       - name: Install stable Rust
         uses: dtolnay/rust-toolchain@stable
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
       - name: Build release executable
         run: cargo build --release --manifest-path rust-gui\Cargo.toml
-      - name: Assemble portable package
+      - name: Assemble portable package and checksum
+        shell: pwsh
+        run: .\scripts\Build-ReleasePackage.ps1 -ExecutablePath .\rust-gui\target\release\windows-split-pac-gui.exe
+      - name: Extract package into a clean directory
         shell: pwsh
         run: |
-          $package = 'release/WindowsSplitPAC'
-          New-Item -ItemType Directory -Force $package | Out-Null
-          Copy-Item rust-gui/target/release/windows-split-pac-gui.exe $package/
-          New-Item -ItemType Directory -Force "$package/rust-gui" | Out-Null
-          Copy-Item rust-gui/Cargo.toml, rust-gui/Cargo.lock "$package/rust-gui/"
-          Copy-Item Start-WindowsSplitPAC.cmd, README.md, README.en.md, LICENSE, CHANGELOG.md, SECURITY.md, THIRD_PARTY_NOTICES.md $package/
-          Copy-Item assets, scripts, rules, src $package/ -Recurse
-          Compress-Archive -Path "$package/*" -DestinationPath release/WindowsSplitPAC.zip -Force
-      - name: Generate SHA-256 checksum
+          $extract = Join-Path $env:RUNNER_TEMP 'windows-split-pac-release-test'
+          Remove-Item -LiteralPath $extract -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force -Path $extract | Out-Null
+          Expand-Archive -LiteralPath .\release\WindowsSplitPAC.zip -DestinationPath $extract -Force
+          "PACKAGE_DIR=$extract" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Validate extracted portable package
+        shell: pwsh
+        run: .\scripts\Test-ReleasePackage.ps1 -PackageDir $env:PACKAGE_DIR
+      - name: Read release version
+        id: release_meta
         shell: pwsh
         run: |
-          $hash = (Get-FileHash release/WindowsSplitPAC.zip -Algorithm SHA256).Hash.ToLowerInvariant()
-          "$hash *WindowsSplitPAC.zip" | Set-Content release/WindowsSplitPAC.zip.sha256 -Encoding ascii -NoNewline
+          $manifest = Get-Content -LiteralPath .\rust-gui\Cargo.toml -Raw
+          if ($manifest -notmatch '(?m)^version\s*=\s*"([^"]+)"') {
+            throw 'Could not read version from rust-gui/Cargo.toml.'
+          }
+          $version = $Matches[1]
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "tag=v$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
       - name: Upload portable package
         uses: actions/upload-artifact@v7
         with:
-          name: WindowsSplitPAC
+          name: WindowsSplitPAC-${{ steps.release_meta.outputs.version }}
           path: |
             release/WindowsSplitPAC.zip
             release/WindowsSplitPAC.zip.sha256
           if-no-files-found: error
-      - name: Publish GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Publish tested GitHub Release
+        if: github.event_name == 'workflow_run'
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.release_meta.outputs.tag }}
+          RELEASE_VERSION: ${{ steps.release_meta.outputs.version }}
+          TESTED_SHA: ${{ github.event.workflow_run.head_sha }}
         shell: pwsh
         run: |
-          gh release create "$env:GITHUB_REF_NAME" release/WindowsSplitPAC.zip release/WindowsSplitPAC.zip.sha256 --generate-notes --title "Windows Split PAC $env:GITHUB_REF_NAME"
+          $PSNativeCommandUseErrorActionPreference = $false
+          git fetch --tags --force
+          if ($LASTEXITCODE -ne 0) { throw 'Failed to fetch tags.' }
+
+          git show-ref --tags --verify --quiet "refs/tags/$env:RELEASE_TAG"
+          $tagExists = ($LASTEXITCODE -eq 0)
+          if (-not $tagExists) {
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git tag -a $env:RELEASE_TAG $env:TESTED_SHA -m "Windows Split PAC $env:RELEASE_TAG"
+            if ($LASTEXITCODE -ne 0) { throw "Failed to create tag $env:RELEASE_TAG" }
+            git push origin $env:RELEASE_TAG
+            if ($LASTEXITCODE -ne 0) { throw "Failed to push tag $env:RELEASE_TAG" }
+          } else {
+            Write-Output "Tag $env:RELEASE_TAG already exists; keeping the existing tag."
+          }
+
+          gh release view $env:RELEASE_TAG *> $null
+          $releaseExists = ($LASTEXITCODE -eq 0)
+          if ($releaseExists) {
+            Write-Output "Release $env:RELEASE_TAG already exists; package validation completed without republishing."
+            exit 0
+          }
+
+          gh release create $env:RELEASE_TAG release/WindowsSplitPAC.zip release/WindowsSplitPAC.zip.sha256 --generate-notes --title "Windows Split PAC $env:RELEASE_TAG"
+          if ($LASTEXITCODE -ne 0) { throw "Failed to publish release $env:RELEASE_TAG" }

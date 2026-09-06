@@ -6,6 +6,7 @@ data/
 release/
 .rust-install/
 rust-gui/target/
+app/*.exe
 
 # Python and editor artifacts
 __pycache__/

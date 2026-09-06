@@ -2,6 +2,7 @@
 param()
 
 $ErrorActionPreference = 'Stop'
+$requiredGenpacVersion = '3.0.1'
 
 function Get-PythonCommand {
     foreach ($candidate in @('python', 'py')) {
@@ -19,19 +20,37 @@ function Get-PythonCommand {
 }
 
 $python = Get-PythonCommand
-& $python -m pip --version
+& $python -m pip --version *> $null
 if ($LASTEXITCODE -ne 0) {
     throw 'pip is unavailable for this Python installation.'
 }
 
-& $python -m pip install --user --upgrade -r (Join-Path $PSScriptRoot '..\requirements.txt')
+$currentVersion = $null
+try {
+    $currentVersion = (& $python -c "import importlib.metadata as m; print(m.version('genpac'))" 2>$null | Select-Object -Last 1).Trim()
+} catch {
+    $currentVersion = $null
+}
+
+if ($currentVersion -eq $requiredGenpacVersion) {
+    Write-Output "Dependencies are ready (genpac $requiredGenpacVersion)."
+    return
+}
+
+$requirements = Join-Path $PSScriptRoot '..\requirements.txt'
+if (-not (Test-Path -LiteralPath $requirements)) {
+    throw "requirements.txt is missing: $requirements"
+}
+
+Write-Output "Installing tested PAC dependency set (genpac $requiredGenpacVersion)..."
+& $python -m pip install --disable-pip-version-check --user -r $requirements
 if ($LASTEXITCODE -ne 0) {
     throw 'Failed to install genpac.'
 }
 
-& $python -m genpac --version
-if ($LASTEXITCODE -ne 0) {
-    throw 'genpac was installed but could not be started.'
+$installedVersion = (& $python -c "import importlib.metadata as m; print(m.version('genpac'))" 2>$null | Select-Object -Last 1).Trim()
+if ($installedVersion -ne $requiredGenpacVersion) {
+    throw "genpac version verification failed. Expected $requiredGenpacVersion, got $installedVersion."
 }
 
-Write-Output 'Dependencies are ready.'
+Write-Output "Dependencies are ready (genpac $installedVersion)."

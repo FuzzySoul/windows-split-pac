@@ -1,6 +1,6 @@
 [package]
 name = "windows-split-pac-core"
-version = "0.3.3"
+version = "0.3.4"
 edition = "2024"
 description = "Pure (GUI-independent) logic for windows-split-pac: service identity, engine abstraction, PAC engine. No eframe dependency so it unit-tests headless."
 license = "MIT"
