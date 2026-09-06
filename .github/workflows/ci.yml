@@ -75,8 +75,9 @@ jobs:
         run: |
           $extract = Join-Path $env:RUNNER_TEMP 'windows-split-pac-release-test'
           Remove-Item -LiteralPath $extract -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force -Path $extract | Out-Null
           Expand-Archive -LiteralPath .\release\WindowsSplitPAC.zip -DestinationPath $extract -Force
-          "PACKAGE_DIR=$extract\WindowsSplitPAC" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "PACKAGE_DIR=$extract" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       - name: Test the extracted portable package
         shell: pwsh
         run: .\scripts\Test-ReleasePackage.ps1 -PackageDir $env:PACKAGE_DIR
